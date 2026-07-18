@@ -350,14 +350,12 @@
     margin-bottom:16px;
   }
   .sports-header .crest{
-    width:38px; height:38px;
+    width:46px; height:46px;
     border-radius:50%;
-    background:var(--arsenal);
-    color:#fff;
+    background:#fff;
+    box-shadow:0 0 0 2px var(--arsenal);
     display:flex; align-items:center; justify-content:center;
-    font-family:'Baloo 2', sans-serif;
-    font-weight:800;
-    font-size:14px;
+    padding:6px;
   }
   .sports-header .name{font-weight:800; font-size:17px;}
   .sports-header .sub{font-size:12px; color:var(--ink-soft); font-weight:600;}
@@ -834,7 +832,7 @@ function sportsHtml(){
   return `
     <div class="sports-card">
       <div class="sports-header">
-        <div class="crest">AFC</div>
+        <div class="crest"><img src="https://download.logo.wine/logo/Arsenal_F.C./Arsenal_F.C.-Logo.wine.png" alt="Arsenal FC crest" style="width:100%;height:100%;object-fit:contain;"></div>
         <div>
           <div class="name">Arsenal</div>
           <div class="sub">Next fixture</div>

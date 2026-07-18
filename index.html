@@ -196,46 +196,55 @@
 
   .entry{
     display:flex;
-    gap:14px;
-    align-items:flex-start;
+    flex-direction:column;
+    gap:8px;
     background:var(--card);
     border-radius:16px;
     padding:14px 16px;
     margin-bottom:10px;
     box-shadow:0 2px 0 rgba(58,42,30,.06);
   }
+  .entry-top{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
   .tag{
-    flex:0 0 auto;
+    flex:0 0 120px;
+    width:120px;
+    text-align:center;
     font-family:'Space Mono', monospace;
     font-size:10px;
     letter-spacing:.04em;
     text-transform:uppercase;
-    padding:5px 10px;
+    padding:6px 8px;
     border-radius:999px;
     color:#fff;
-    margin-top:2px;
     white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-  .entry-body{flex:1; min-width:0;}
-  .entry-body a.headline{
+  a.headline{
+    flex:1;
+    min-width:0;
     font-weight:700;
     font-size:16px;
     color:var(--ink);
     text-decoration:none;
     line-height:1.35;
   }
-  .entry-body a.headline:hover{color:var(--coral);}
+  a.headline:hover{color:var(--coral);}
   .entry-meta{
     font-family:'Space Mono', monospace;
     font-size:11px;
     color:var(--ink-soft);
-    margin-top:5px;
+    margin-left:134px;
   }
   .entry-actions{
     display:flex;
     align-items:center;
     gap:6px;
-    margin-top:10px;
+    margin-left:134px;
   }
   .react-btn{
     background:var(--cream-2);
@@ -543,7 +552,7 @@
 
 <div class="wrap" id="app"></div>
 
-<footer>Mr Eric's Lounge</footer>
+<footer></footer>
 
 <script>
 /* =========================================================
@@ -671,16 +680,16 @@ function dispatchListHtml(list){
       const readLabel = a.read ? `${a.read} read` : '';
       html += `
         <div class="entry">
-          <div class="tag" style="background:${fac.color}">${fac.label}</div>
-          <div class="entry-body">
+          <div class="entry-top">
+            <div class="tag" style="background:${fac.color}">${fac.label}</div>
             <a class="headline" href="${a.url}" rel="noopener">${escapeHtml(a.headline)}</a>
-            <div class="entry-meta">${domainOf(a.url)}${readLabel ? ' · ' + readLabel : ''}</div>
-            <div class="entry-actions">
-              <button class="react-btn ${saved==='👍'?'active':''}" data-key="${key}" data-emoji="👍">👍</button>
-              <button class="react-btn ${saved==='😮'?'active':''}" data-key="${key}" data-emoji="😮">😮</button>
-              <button class="react-btn ${saved==='🤔'?'active':''}" data-key="${key}" data-emoji="🤔">🤔</button>
-              <button class="share-btn" data-url="${a.url}" data-title="${escapeHtml(a.headline)}">Share</button>
-            </div>
+          </div>
+          <div class="entry-meta">${domainOf(a.url)}${readLabel ? ' · ' + readLabel : ''}</div>
+          <div class="entry-actions">
+            <button class="react-btn ${saved==='👍'?'active':''}" data-key="${key}" data-emoji="👍">👍</button>
+            <button class="react-btn ${saved==='😮'?'active':''}" data-key="${key}" data-emoji="😮">😮</button>
+            <button class="react-btn ${saved==='🤔'?'active':''}" data-key="${key}" data-emoji="🤔">🤔</button>
+            <button class="share-btn" data-url="${a.url}" data-title="${escapeHtml(a.headline)}">Share</button>
           </div>
         </div>`;
     });

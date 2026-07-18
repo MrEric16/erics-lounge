@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eric's Lounge</title>
+<title>Mr Eric's Lounge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -436,7 +436,7 @@
 
 <header>
   <div class="wrap masthead">
-    <h1 class="title" id="titleLink">Eric's Lounge</h1>
+    <h1 class="title" id="titleLink">Mr Eric's Lounge</h1>
     <div class="subtitle">Today's news, fresh off the press</div>
     <div class="stat-row">
       <div class="stat-pill">
@@ -453,7 +453,7 @@
 
 <div class="wrap" id="app"></div>
 
-<footer>Eric's Lounge</footer>
+<footer>Mr Eric's Lounge</footer>
 
 <script>
 /* =========================================================
@@ -754,7 +754,7 @@ function viewHome(){
 function viewFaculty(key){
   if(key === 'all'){
     return `
-      <a class="back-link" href="#">← Back to Eric's Lounge</a>
+      <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
       <section style="padding-top:14px;">
         <div class="section-head"><span class="emoji">📰</span><h2>All Domains — Full Archive</h2></div>
         ${dispatchListHtml(DISPATCHES)}
@@ -763,11 +763,11 @@ function viewFaculty(key){
   }
   const fac = FAC_MAP[key];
   if(!fac){
-    return `<a class="back-link" href="#">← Back to Eric's Lounge</a><div class="empty-card" style="margin-top:20px;">Unknown domain.</div>`;
+    return `<a class="back-link" href="#">← Back to Mr Eric's Lounge</a><div class="empty-card" style="margin-top:20px;">Unknown domain.</div>`;
   }
   const list = DISPATCHES.filter(a=>a.faculty===key);
   return `
-    <a class="back-link" href="#">← Back to Eric's Lounge</a>
+    <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
     <section style="padding-top:14px;">
       <div class="section-head"><span class="dot" style="width:12px;height:12px;border-radius:50%;background:${fac.color};display:inline-block;"></span><h2>${fac.label}</h2></div>
       ${dispatchListHtml(list)}
@@ -785,7 +785,7 @@ function viewWatchHub(){
   }).join('');
 
   return `
-    <a class="back-link" href="#">← Back to Eric's Lounge</a>
+    <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
     <section style="padding-top:14px;">
       <div class="section-head"><span class="emoji">🎬</span><h2>Watch — by Domain</h2></div>
       <div class="faculties">

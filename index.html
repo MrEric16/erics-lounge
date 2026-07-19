@@ -316,6 +316,34 @@
   }
   .otd-card a{color:#fff; text-decoration:underline;}
 
+  /* ---------- Today is ___ Day ---------- */
+  .ntd-card{
+    background:linear-gradient(135deg, var(--gold) 0%, var(--coral) 100%);
+    color:#fff;
+    border-radius:20px;
+    padding:26px 22px;
+    text-align:center;
+  }
+  .ntd-label{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    opacity:.85;
+  }
+  .ntd-name{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:26px;
+    margin-top:6px;
+  }
+  .ntd-source{
+    font-size:11px;
+    font-weight:600;
+    opacity:.8;
+    margin-top:10px;
+  }
+
   /* ---------- Mood meter ---------- */
   .mood-row{display:flex; gap:10px;}
   .mood-btn{
@@ -656,6 +684,11 @@ const DISPATCHES = [
 
 const ARSENAL_NEXT_FIXTURE = "Girona vs Arsenal (Away) — Pre-season Friendly — Estadi Municipal de Montilivi — Sat 1 Aug 2026, 23:00 (Tashkent time)";
 
+// "Today is ___ Day" — sourced from nationaltoday.com. No live cross-site fetch is possible (nationaltoday.com
+// has no public API and blocks cross-origin requests), so this is baked in manually and needs refreshing
+// periodically — same pattern as the Arsenal fixture. Update the date + name when it goes stale.
+const TODAY_NATIONAL_DAY = { name: "National Ice Cream Day", date: "2026-07-19" };
+
 // Students of the week — add as many as you like. photoUrl gets embedded directly when Eric sends a photo.
 const STUDENTS_OF_WEEK = [
   // { name:"Student Name", note:"Why they earned it", photoUrl:"" },
@@ -829,6 +862,20 @@ function wireEntryActions(container){
 }
 
 /* ---- On This Day (Wikipedia public API, fetched client-side) ---- */
+const OTD_NEGATIVE_KEYWORDS = ['war','bomb','attack','kill','murder','assassin','invas','massacre','genocide','coup','riot','terroris','execut','died','death','dead','crash','disaster','earthquake','explosion','shoot','holocaust','slave','conflict','battle','siege','uprising','famine','plague','epidemic','collapse','sank','sinks','sinking','tsunami','hurricane','flood','fire kill','violence','abuse','captur','prison','hostage','revolt','rebellion'];
+const OTD_POSITIVE_KEYWORDS = ['discover','invent','launch','first','patent','award','achiev','breakthrough','found','open','premiere','publish','record','moon','space','vaccine','cure','wins','won','elect','peace','independence','celebrat','anniversary'];
+const OTD_FALLBACK = [
+  { year:"1969", text:"Apollo 11 entered lunar orbit, a day before Neil Armstrong and Buzz Aldrin became the first humans to walk on the Moon." },
+  { year:"1928", text:"Alexander Fleming returned from holiday to find a mould had wiped out bacteria in a petri dish he'd left out — the accidental discovery behind penicillin." },
+  { year:"1990", text:"The Hubble Space Telescope sent back its first images of deep space, transforming what humanity could see of the universe." },
+  { year:"1876", text:"Alexander Graham Bell filed the patent that would become the telephone, changing how humans communicate forever." },
+  { year:"1961", text:"Yuri Gagarin became the first human in space, orbiting Earth aboard Vostok 1." },
+  { year:"1908", text:"Ford's Model T rolled off the production line for the first time, making cars affordable for ordinary people." },
+  { year:"1953", text:"James Watson and Francis Crick's paper describing the structure of DNA was published, one of the most important discoveries in biology." },
+  { year:"1928", text:"John Logie Baird gave the first public demonstration of colour television." },
+  { year:"1969", text:"The first ATM opened for public use, letting people withdraw cash without a bank teller." },
+  { year:"1903", text:"The Wright brothers' Flyer completed the first sustained, controlled flight of a powered aircraft." },
+];
 async function loadOnThisDay(){
   const card = document.getElementById('otdCard');
   if(!card) return;
@@ -840,8 +887,14 @@ async function loadOnThisDay(){
     if(!res.ok) throw new Error('bad response');
     const data = await res.json();
     const pool = data.selected || [];
-    if(pool.length === 0) throw new Error('empty');
-    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const clean = pool.filter(p => {
+      const t = (p.text || '').toLowerCase();
+      return !OTD_NEGATIVE_KEYWORDS.some(k => t.includes(k));
+    });
+    let candidates = clean.filter(p => OTD_POSITIVE_KEYWORDS.some(k => (p.text || '').toLowerCase().includes(k)));
+    if(candidates.length === 0) candidates = clean;
+    if(candidates.length === 0) throw new Error('no safe candidates');
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
     const page = pick.pages && pick.pages[0];
     const link = page && page.content_urls && page.content_urls.desktop ? page.content_urls.desktop.page : null;
     card.innerHTML = `
@@ -849,7 +902,11 @@ async function loadOnThisDay(){
       <div class="otd-text">${escapeHtml(pick.text)}${link ? ` — <a href="${link}" rel="noopener">read more</a>` : ''}</div>
     `;
   }catch(e){
-    card.innerHTML = '<div class="otd-text">Couldn\'t load today\'s history fact — try refreshing.</div>';
+    const pick = OTD_FALLBACK[Math.floor(Math.random() * OTD_FALLBACK.length)];
+    card.innerHTML = `
+      <div class="otd-year">${escapeHtml(pick.year)}</div>
+      <div class="otd-text">${escapeHtml(pick.text)}</div>
+    `;
   }
 }
 
@@ -966,6 +1023,22 @@ function birthdaysHtml(){
   }).join('')}</div>`;
 }
 
+function nationalDayHtml(){
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const dd = String(now.getDate()).padStart(2,'0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+  if(TODAY_NATIONAL_DAY.date === todayStr){
+    return `<div class="ntd-card">
+      <div class="ntd-label">Happy</div>
+      <div class="ntd-name">${escapeHtml(TODAY_NATIONAL_DAY.name)}</div>
+      <div class="ntd-source">via nationaltoday.com</div>
+    </div>`;
+  }
+  return '<div class="empty-card">Ask Mr Eric to update today\'s holiday!</div>';
+}
+
 /* ---- Views ---- */
 
 function viewHome(){
@@ -1052,6 +1125,11 @@ function viewHome(){
     <section>
       <div class="section-head"><span class="emoji">🎂</span><h2>Birthdays</h2></div>
       ${birthdaysHtml()}
+    </section>
+
+    <section>
+      <div class="section-head"><span class="emoji">🎉</span><h2>Today Is...</h2></div>
+      ${nationalDayHtml()}
     </section>
   `;
 }

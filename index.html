@@ -316,6 +316,37 @@
   }
   .otd-card a{color:#fff; text-decoration:underline;}
 
+  /* ---------- Talk to Mr Eric ---------- */
+  .talk-card{
+    background:#F6F0E6;
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:24px 22px;
+  }
+  .talk-card p{
+    margin:0 0 18px 0;
+    font-size:15px;
+    line-height:1.6;
+    color:var(--ink);
+    font-weight:600;
+  }
+  .talk-card .talk-note{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-top:14px;
+  }
+  .talk-btn{
+    display:inline-block;
+    background:var(--ink);
+    color:#fff;
+    text-decoration:none;
+    font-weight:700;
+    font-size:14px;
+    padding:12px 22px;
+    border-radius:999px;
+  }
+
   /* ---------- Mood meter ---------- */
   .mood-row{display:flex; gap:10px;}
   .mood-btn{
@@ -655,6 +686,7 @@ const DISPATCHES = [
 ];
 
 const ARSENAL_NEXT_FIXTURE = "Girona vs Arsenal (Away) — Pre-season Friendly — Estadi Municipal de Montilivi — Sat 1 Aug 2026, 23:00 (Tashkent time)";
+const TALK_FORM_URL = "https://forms.gle/UnSddJhAfWx4nXDCA";
 
 // Students of the week — add as many as you like. photoUrl gets embedded directly when Eric sends a photo.
 const STUDENTS_OF_WEEK = [
@@ -989,6 +1021,15 @@ function viewHome(){
           <span class="name">All Domains — Full Archive</span>
           <span class="count">${DISPATCHES.length} total</span>
         </a>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><span class="emoji">💬</span><h2>Talk to Mr Eric</h2></div>
+      <div class="talk-card">
+        <p>Need to talk about something? You can message me here — anonymously if you'd like.</p>
+        <a class="talk-btn" href="${TALK_FORM_URL}" rel="noopener">Send a message</a>
+        <div class="talk-note">If it's urgent, please talk to a trusted adult right now too.</div>
       </div>
     </section>
 

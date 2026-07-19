@@ -574,6 +574,29 @@
     font-size:12px;
     font-weight:600;
   }
+
+  /* ---------- Watch page: white + red theme (layout unchanged) ---------- */
+  body.theme-watch{background:#FFFFFF;}
+  body.theme-watch .back-link{color:#D6191A;}
+  body.theme-watch .section-head h2{color:#1A1A1A;}
+  body.theme-watch .section-head .emoji{filter:none;}
+  body.theme-watch .fac-tile{
+    background:#FFFFFF;
+    border:1.5px solid #D6191A;
+  }
+  body.theme-watch .fac-tile .count{color:#D6191A;}
+  body.theme-watch .fac-tile.all{background:#D6191A; border:none;}
+  body.theme-watch .fac-tile.all .name{color:#fff;}
+  body.theme-watch .fac-tile.all .count{color:#FBD3D3;}
+  body.theme-watch .watch-card{
+    background:#FFFFFF;
+    border:1.5px solid #EFD0D0;
+    box-shadow:none;
+  }
+  body.theme-watch .watch-thumb .play{
+    background:rgba(214,25,26,.88);
+  }
+  body.theme-watch .watch-channel{color:#B33;}
 </style>
 </head>
 <body>
@@ -958,8 +981,7 @@ function viewPhotos(){
     ? '<div class="empty-card">No photos yet. Give it time.</div>'
     : `<div class="photo-grid">${sorted.map(p => `
         <a class="photo-item" href="${p.url}" target="_blank" rel="noopener">
-          <img src="${p.url}" alt="${escapeHtml(p.caption || '')}" loading="lazy">
-          ${p.caption ? `<div class="photo-caption">${escapeHtml(p.caption)}</div>` : ''}
+          <img src="${p.url}" alt="${escapeHtml(p.caption || 'Photo')}" loading="lazy">
         </a>
       `).join('')}</div>`;
   return `
@@ -1230,6 +1252,7 @@ function renderRoute(){
   }
 
   app.innerHTML = html;
+  document.body.classList.toggle('theme-watch', parts[0] === 'watch');
   wireWatchButtons(app);
   wireEntryActions(app);
   if(parts[0] === 'search') wireSearch(app);

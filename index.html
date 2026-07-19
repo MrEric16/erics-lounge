@@ -803,6 +803,22 @@ const PHOTOS = [
 function zeroRows(names){
   return names.map(name => ({ name, pld:0, w:0, d:0, l:0, gf:0, ga:0, pts:0 }));
 }
+// Sports hub tiles — each links straight to the league/site's own official page (opens in a new
+// tab), except "League Tables" which stays inside the site. These are always current since
+// they open the real thing, not a copy of it.
+const SPORTS_TILES = [
+  { emoji:"⚽", name:"BBC Football", sub:"News, always current", url:"https://www.bbc.com/sport/football", color:"var(--coral)" },
+  { emoji:"📊", name:"League Tables", sub:"All leagues, one page", url:"#sports/tables", color:"var(--teal)", internal:true },
+  { emoji:"🏴", name:"Premier League", sub:"Official site", url:"https://www.premierleague.com/en", color:"var(--f-jur)" },
+  { emoji:"🇪🇸", name:"La Liga", sub:"Official news", url:"https://www.laliga.com/en-GB/news", color:"var(--f-ir)" },
+  { emoji:"🇮🇹", name:"Serie A", sub:"Official news", url:"https://en.legaseriea.it/news", color:"var(--f-econ)" },
+  { emoji:"🇩🇪", name:"Bundesliga", sub:"Official news", url:"https://www.bundesliga.com/en/bundesliga/news", color:"var(--f-biz)" },
+  { emoji:"🇫🇷", name:"Ligue 1", sub:"Official site", url:"https://ligue1.com/en", color:"var(--f-sci)" },
+  { emoji:"🇺🇿", name:"Uzbekistan Super League", sub:"Official site", url:"https://pfl.uz", color:"var(--f-it)" },
+  { emoji:"🇦🇪", name:"UAE Pro League", sub:"Official site", url:"https://www.uaeproleague.ae/en", color:"var(--f-psy)" },
+  { emoji:"🏒", name:"KHL", sub:"Official site", url:"https://en.khl.ru", color:"var(--ink)" },
+  { emoji:"🥊", name:"UFC", sub:"Official site", url:"https://www.ufc.com", color:"var(--f-des)" },
+];
 const SPORTS_LEAGUES = [
   {
     name: "English Premier League", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", note: "Pre-season — starts 21 Aug 2026",
@@ -1172,9 +1188,28 @@ function leagueTableHtml(league){
   `;
 }
 
-function viewSports(){
+function sportsTileHtml(t){
+  const attrs = t.internal ? '' : ' target="_blank" rel="noopener"';
+  return `<a class="fac-tile" href="${t.url}"${attrs}>
+    <span class="name"><span class="dot" style="background:${t.color}"></span>${t.emoji} ${escapeHtml(t.name)}</span>
+    <span class="count">${escapeHtml(t.sub)}</span>
+  </a>`;
+}
+function viewSportsHub(){
   return `
     <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
+    <section style="padding-top:14px;">
+      <div class="section-head"><span class="emoji">⚽</span><h2>Sports</h2></div>
+      <div class="faculties">
+        ${SPORTS_TILES.map(sportsTileHtml).join('')}
+      </div>
+    </section>
+  `;
+}
+
+function viewSports(){
+  return `
+    <a class="back-link" href="#sports">← Back to Sports</a>
     <section style="padding-top:14px;">
       <div class="section-head"><span class="emoji">⚽</span><h2>Sports — League Tables</h2></div>
       ${SPORTS_LEAGUES.map(leagueTableHtml).join('')}
@@ -1446,8 +1481,10 @@ function renderRoute(){
     html = viewSearch();
   } else if(parts[0] === 'photos'){
     html = viewPhotos();
-  } else if(parts[0] === 'sports'){
+  } else if(parts[0] === 'sports' && parts[1] === 'tables'){
     html = viewSports();
+  } else if(parts[0] === 'sports'){
+    html = viewSportsHub();
   } else {
     html = viewHome();
   }

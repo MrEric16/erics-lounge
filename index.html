@@ -1253,12 +1253,41 @@ const RANDOM_FACTS = [
   "Cleopatra lived closer in time to the Moon landing than to the building of the Great Pyramid of Giza.",
   "Humans share roughly 60% of their DNA with bananas.",
 ];
-function onThisDayHtml(){
-  const pick = ON_THIS_DAY_FACTS[Math.floor(Math.random() * ON_THIS_DAY_FACTS.length)];
-  return `
-    <div class="otd-year">${escapeHtml(pick.year)}</div>
-    <div class="otd-text">${escapeHtml(pick.text)}</div>
-  `;
+const OTD_NEGATIVE_KEYWORDS = ['war','bomb','attack','kill','murder','assassin','invas','massacre','genocide','coup','riot','terroris','execut','died','death','dead','crash','disaster','earthquake','explosion','shoot','holocaust','slave','conflict','battle','siege','uprising','famine','plague','epidemic','collapse','sank','sinks','sinking','tsunami','hurricane','flood','fire kill','violence','abuse','captur','prison','hostage','revolt','rebellion'];
+const OTD_POSITIVE_KEYWORDS = ['discover','invent','launch','first','patent','award','achiev','breakthrough','found','open','premiere','publish','record','moon','space','vaccine','cure','wins','won','elect','peace','independence','celebrat','anniversary'];
+async function loadOnThisDay(){
+  const card = document.getElementById('otdCard');
+  if(!card) return;
+  const now = new Date();
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const dd = String(now.getDate()).padStart(2,'0');
+  try{
+    const res = await fetch(`https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected/${mm}/${dd}`);
+    if(!res.ok) throw new Error('bad response');
+    const data = await res.json();
+    const pool = data.selected || [];
+    const clean = pool.filter(p => {
+      const t = (p.text || '').toLowerCase();
+      return !OTD_NEGATIVE_KEYWORDS.some(k => t.includes(k));
+    });
+    let candidates = clean.filter(p => OTD_POSITIVE_KEYWORDS.some(k => (p.text || '').toLowerCase().includes(k)));
+    if(candidates.length === 0) candidates = clean;
+    if(candidates.length === 0) throw new Error('no safe candidates for today');
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    const page = pick.pages && pick.pages[0];
+    const link = page && page.content_urls && page.content_urls.desktop ? page.content_urls.desktop.page : null;
+    card.innerHTML = `
+      <div class="otd-year">${escapeHtml(String(pick.year))}</div>
+      <div class="otd-text">${escapeHtml(pick.text)}${link ? ` — <a href="${link}" rel="noopener">read more</a>` : ''}</div>
+    `;
+  }catch(e){
+    // Fallback only — today's live feed had nothing safe/available. Not date-matched, just keeps the card from being empty.
+    const pick = ON_THIS_DAY_FACTS[Math.floor(Math.random() * ON_THIS_DAY_FACTS.length)];
+    card.innerHTML = `
+      <div class="otd-year">${escapeHtml(pick.year)}</div>
+      <div class="otd-text">${escapeHtml(pick.text)}</div>
+    `;
+  }
 }
 function randomFactHtml(){
   const pick = RANDOM_FACTS[Math.floor(Math.random() * RANDOM_FACTS.length)];
@@ -1516,7 +1545,9 @@ function viewHome(){
 
     <section>
       <div class="section-head"><span class="emoji">📅</span><h2>On This Day</h2></div>
-      <div class="otd-card">${onThisDayHtml()}</div>
+      <div class="otd-card" id="otdCard">
+        <div class="otd-text">Loading…</div>
+      </div>
     </section>
 
     <section>
@@ -1693,7 +1724,7 @@ function renderRoute(){
   wireWatchButtons(app);
   wireEntryActions(app);
   if(parts[0] === 'search') wireSearch(app);
-  if(parts.length === 0){ wireRandomButton(app); wireRandomVideoButton(app); checkAchievements(); }
+  if(parts.length === 0){ loadOnThisDay(); wireRandomButton(app); wireRandomVideoButton(app); checkAchievements(); }
   if(parts[0] === 'watch' && parts[1]){
     let autoplayId = null;
     try{ autoplayId = sessionStorage.getItem('autoplayVideoId'); }catch(e){}

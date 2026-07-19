@@ -318,27 +318,6 @@
 
 
 
-  /* ---------- Mood meter ---------- */
-  .mood-row{display:flex; gap:10px;}
-  .mood-btn{
-    background:var(--card);
-    border:none;
-    border-radius:16px;
-    font-size:26px;
-    padding:14px;
-    flex:1;
-    cursor:pointer;
-    box-shadow:0 3px 0 rgba(58,42,30,.08);
-  }
-  .mood-btn.active{background:var(--coral); box-shadow:0 3px 0 rgba(58,42,30,.15);}
-  .mood-response{
-    margin-top:12px;
-    font-weight:700;
-    font-size:14px;
-    color:var(--ink-soft);
-    min-height:20px;
-  }
-
   /* ---------- Random tile ---------- */
   .random-tile{
     background:var(--coral);
@@ -1087,16 +1066,6 @@ function viewHome(){
     </section>
 
     <section>
-      <div class="section-head"><span class="emoji">🎭</span><h2>How's Today Going?</h2></div>
-      <div class="mood-row" id="moodRow">
-        <button class="mood-btn" data-mood="😩">😩</button>
-        <button class="mood-btn" data-mood="😐">😐</button>
-        <button class="mood-btn" data-mood="🙂">🙂</button>
-        <button class="mood-btn" data-mood="🔥">🔥</button>
-      </div>
-    </section>
-
-    <section>
       <div class="section-head"><span class="emoji">📅</span><h2>On This Day</h2></div>
       <div class="otd-card" id="otdCard">
         <div class="otd-text">Loading…</div>
@@ -1260,7 +1229,7 @@ function renderRoute(){
   wireWatchButtons(app);
   wireEntryActions(app);
   if(parts[0] === 'search') wireSearch(app);
-  if(parts.length === 0){ loadOnThisDay(); wireRandomButton(app); wireMoodMeter(app); checkAchievements(); }
+  if(parts.length === 0){ loadOnThisDay(); wireRandomButton(app); checkAchievements(); }
   window.scrollTo(0,0);
 }
 
@@ -1301,27 +1270,6 @@ function burstConfetti(){
     for(let i=0;i<20;i++) spawnConfettiParticle(colors);
   }, 150);
   setTimeout(()=> clearInterval(waveInterval), 2000);
-}
-
-/* ---- Mood meter (per-device, per-day — not a shared class tally) ---- */
-function moodKey(){
-  const d = new Date();
-  return 'mood:' + d.toISOString().slice(0,10);
-}
-function wireMoodMeter(container){
-  const row = container.querySelector('#moodRow');
-  if(!row) return;
-  const saved = (()=>{ try{ return localStorage.getItem(moodKey()); }catch(e){ return null; } })();
-  if(saved){
-    row.querySelectorAll('.mood-btn').forEach(b=> b.classList.toggle('active', b.dataset.mood === saved));
-  }
-  row.querySelectorAll('.mood-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const mood = btn.dataset.mood;
-      try{ localStorage.setItem(moodKey(), mood); }catch(e){}
-      row.querySelectorAll('.mood-btn').forEach(b=> b.classList.toggle('active', b === btn));
-    });
-  });
 }
 
 /* ---- Achievement toasts (session-only, playful, not a real leaderboard) ---- */

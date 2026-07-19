@@ -556,6 +556,7 @@
   .sotw-photo .placeholder{font-size:34px;}
   .sotw-name{font-weight:800; font-size:19px;}
   .sotw-note{color:var(--ink-soft); font-size:13.5px; margin-top:4px; font-weight:600;}
+  .sotw-date{color:var(--gold); font-size:12px; margin-top:4px; font-family:'Space Mono', monospace; font-weight:700;}
 
   /* ---------- Recommend ---------- */
   .rec-list{display:flex; flex-direction:column; gap:10px;}
@@ -754,6 +755,27 @@
   }
 
   /* ---------- Birthdays ---------- */
+  .bday-tile-card{
+    background:var(--ink-solid);
+    border-radius:18px;
+    padding:18px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    box-shadow:0 3px 0 rgba(58,42,30,.15);
+  }
+  .bday-tile-card.today{background:var(--gold);}
+  .bday-tile-label{font-family:'Space Mono', monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:rgba(255,255,255,.7);}
+  .bday-tile-name{color:#fff; font-weight:800; font-size:17px; font-family:'Baloo 2', sans-serif;}
+  .bday-trigger{cursor:pointer;}
+  .bday-today-banner{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-bottom:12px;
+  }
   .bday-list{
     display:grid;
     grid-template-columns:repeat(2,1fr);
@@ -1050,9 +1072,10 @@ const DISPATCHES = [
 
 const ARSENAL_NEXT_FIXTURE = "Girona vs Arsenal (Away) — Pre-season Friendly — Estadi Municipal de Montilivi — Sat 1 Aug 2026, 23:00 (Tashkent time)";
 
-// Students of the week — add as many as you like. photoUrl gets embedded directly when Eric sends a photo.
+// Superstars archive — every winner ever added, newest first. Add a new entry each time
+// Eric sends a photo + name; date is recorded automatically as the day it's added.
 const STUDENTS_OF_WEEK = [
-  // { name:"Student Name", note:"Why they earned it", photoUrl:"" },
+  // { name:"Student Name", note:"Why they earned it", photoUrl:"", date:"dd/mm/yyyy" },
 ];
 
 const RECOMMENDATIONS = [
@@ -2680,19 +2703,43 @@ function sportsHtml(){
 function studentsHtml(){
   if(STUDENTS_OF_WEEK.length===0){
     return `<div class="sotw-grid"><div class="sotw-card">
-      <div class="sotw-photo"><span class="placeholder">🌟</span></div>
+      <div class="sotw-photo"><span class="placeholder">${icon('star')}</span></div>
       <div>
         <div class="sotw-name">Nobody yet. The throne is empty.</div>
         <div class="sotw-note">Mr Eric will add this week's photo soon.</div>
       </div>
     </div></div>`;
   }
-  return `<div class="sotw-grid">${STUDENTS_OF_WEEK.map(s => `
+  const sorted = [...STUDENTS_OF_WEEK].sort((a,b)=> parseDMY(b.date) - parseDMY(a.date));
+  const latest = sorted[0];
+  return `<div class="sotw-grid">
     <div class="sotw-card">
-      <div class="sotw-photo">${s.photoUrl ? `<img src="${s.photoUrl}" alt="${escapeHtml(s.name)}">` : '<span class="placeholder">🌟</span>'}</div>
+      <div class="sotw-photo">${latest.photoUrl ? `<img src="${latest.photoUrl}" alt="${escapeHtml(latest.name)}">` : `<span class="placeholder">${icon('star')}</span>`}</div>
+      <div>
+        <div class="sotw-name">${escapeHtml(latest.name)}</div>
+        <div class="sotw-note">${escapeHtml(latest.note)}</div>
+        <div class="sotw-date">${escapeHtml(latest.date)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+function parseDMY(str){
+  if(!str) return 0;
+  const [d, m, y] = str.split('/').map(Number);
+  return new Date(y, m-1, d).getTime();
+}
+function superstarsArchiveHtml(){
+  if(STUDENTS_OF_WEEK.length===0){
+    return '<div class="empty-card">No superstars yet. Mr Eric will add this week\'s photo soon.</div>';
+  }
+  const sorted = [...STUDENTS_OF_WEEK].sort((a,b)=> parseDMY(b.date) - parseDMY(a.date));
+  return `<div class="sotw-grid">${sorted.map(s => `
+    <div class="sotw-card">
+      <div class="sotw-photo">${s.photoUrl ? `<img src="${s.photoUrl}" alt="${escapeHtml(s.name)}">` : `<span class="placeholder">${icon('star')}</span>`}</div>
       <div>
         <div class="sotw-name">${escapeHtml(s.name)}</div>
         <div class="sotw-note">${escapeHtml(s.note)}</div>
+        <div class="sotw-date">${escapeHtml(s.date)}</div>
       </div>
     </div>
   `).join('')}</div>`;
@@ -2710,12 +2757,18 @@ function recommendationsHtml(){
   `).join('')}</div>`;
 }
 
-function birthdaysHtml(){
+function upcomingBirthdayTileHtml(){
   if(BIRTHDAYS.length===0){
     return '<div class="empty-card">No birthdays yet. Nobody\'s been born apparently.</div>';
   }
   const today = new Date();
   const todayM = today.getMonth()+1, todayD = today.getDate();
+  const todays = BIRTHDAYS.filter(b => b.month===todayM && b.day===todayD);
+  if(todays.length > 0){
+    return `<div class="bday-tile-card today">
+      ${todays.map(b => `<span class="bday-tile-name bday-trigger" data-name="${escapeHtml(b.name)}">🎉 It's ${escapeHtml(b.name)}'s birthday today!</span>`).join('')}
+    </div>`;
+  }
   const withNext = BIRTHDAYS.map(b=>{
     let next = new Date(today.getFullYear(), b.month-1, b.day);
     if(next < new Date(today.getFullYear(), todayM-1, todayD)){
@@ -2723,14 +2776,45 @@ function birthdaysHtml(){
     }
     return {...b, next};
   }).sort((a,b)=> a.next - b.next);
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `<div class="bday-list">${withNext.map(b=>{
+  const soonest = withNext[0];
+  const dd = String(soonest.day).padStart(2,'0');
+  const mm = String(soonest.month).padStart(2,'0');
+  return `<div class="bday-tile-card">
+    <span class="bday-tile-label">Upcoming</span>
+    <span class="bday-tile-name">${escapeHtml(soonest.name)}, ${dd}/${mm}</span>
+  </div>`;
+}
+function birthdaysHtml(){
+  if(BIRTHDAYS.length===0){
+    return '<div class="empty-card">No birthdays yet. Nobody\'s been born apparently.</div>';
+  }
+  const today = new Date();
+  const todayM = today.getMonth()+1, todayD = today.getDate();
+  const todayDD = String(todayD).padStart(2,'0');
+  const todayMM = String(todayM).padStart(2,'0');
+  const withNext = BIRTHDAYS.map(b=>{
+    let next = new Date(today.getFullYear(), b.month-1, b.day);
+    if(next < new Date(today.getFullYear(), todayM-1, todayD)){
+      next = new Date(today.getFullYear()+1, b.month-1, b.day);
+    }
+    return {...b, next};
+  }).sort((a,b)=> a.next - b.next);
+  const rows = withNext.map(b=>{
     const isToday = b.month===todayM && b.day===todayD;
+    const dd = String(b.day).padStart(2,'0');
+    const mm = String(b.month).padStart(2,'0');
+    const nameHtml = isToday
+      ? `<span class="bday-name bday-trigger" data-name="${escapeHtml(b.name)}">${escapeHtml(b.name)} 🎉</span>`
+      : `<span class="bday-name">${escapeHtml(b.name)}</span>`;
     return `<div class="bday-item ${isToday?'today':''}">
-      <span class="bday-name">${escapeHtml(b.name)}${isToday ? ' 🎉' : ''}</span>
-      <span class="bday-date">${b.day} ${monthNames[b.month-1]}</span>
+      ${nameHtml}
+      <span class="bday-date">${dd}/${mm}</span>
     </div>`;
-  }).join('')}</div>`;
+  }).join('');
+  return `
+    <div class="bday-today-banner">Today is ${todayDD}/${todayMM}</div>
+    <div class="bday-list">${rows}</div>
+  `;
 }
 
 /* ---- Views ---- */
@@ -2867,7 +2951,7 @@ function viewHome(){
 
     <section>
       <div class="section-head"><span class="emoji">${icon('cake')}</span><h2>Birthdays</h2><a class="section-link" href="#birthdays">See more →</a></div>
-      ${birthdaysHtml()}
+      ${upcomingBirthdayTileHtml()}
     </section>
   `;
 }
@@ -2948,8 +3032,8 @@ function viewSuperstars(){
   return `
     <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
     <section style="padding-top:14px;">
-      <div class="section-head"><span class="emoji">${icon('star')}</span><h2>Superstars of the Week</h2></div>
-      ${studentsHtml()}
+      <div class="section-head"><span class="emoji">${icon('star')}</span><h2>Superstars — Hall of Fame</h2></div>
+      ${superstarsArchiveHtml()}
     </section>
   `;
 }
@@ -3190,6 +3274,30 @@ function triggerTottenhamEgg(){
     p.style.fontSize = '26px';
   }, 5000);
 }
+
+/* ---- Birthday popup ---- */
+function showBirthdayPopup(names){
+  const upper = names.map(n => n.toUpperCase());
+  const text = 'HAPPY BIRTHDAY ' + upper.join(' & ') + '! 🎉🎂';
+  showEasterEggPopup(text, 5000);
+  if(navigator.vibrate){ try{ navigator.vibrate([80,40,80,40,200]); }catch(e){} }
+  const bdayEmojis = ['🎉','🎂','🎈','✨','🥳'];
+  burstThemedConfetti((p)=>{
+    p.textContent = bdayEmojis[Math.floor(Math.random()*bdayEmojis.length)];
+    p.style.fontSize = '26px';
+  }, 5000);
+}
+function checkTodaysBirthdays(){
+  const today = new Date();
+  const todayM = today.getMonth()+1, todayD = today.getDate();
+  const todays = BIRTHDAYS.filter(b => b.month===todayM && b.day===todayD);
+  if(todays.length > 0) showBirthdayPopup(todays.map(b => b.name));
+}
+document.body.addEventListener('click', (e)=>{
+  const bdayTrigger = e.target.closest('.bday-trigger');
+  if(bdayTrigger) showBirthdayPopup([bdayTrigger.dataset.name]);
+});
+
 document.body.addEventListener('click', (e)=>{
   const trigger = e.target.closest('.easter-egg-trigger');
   if(!trigger) return;
@@ -3240,6 +3348,7 @@ document.getElementById('titleLink').addEventListener('click', ()=>{
 });
 window.addEventListener('hashchange', renderRoute);
 renderRoute();
+setTimeout(checkTodaysBirthdays, 700);
 
 /* ---- Live clock ---- */
 function pad(n){ return n.toString().padStart(2,'0'); }

@@ -1,8 +1,13 @@
 // Service worker for Mr Eric's Lounge — caches the app shell so it still opens with no signal.
 // Live data (weather, on-this-day, news links, videos) still needs a connection — the app
 // already shows a "couldn't load" message gracefully in those spots when offline.
+//
+// STRATEGY: network-first, cache as fallback. This matters — cache-first would mean every
+// push takes an extra reload to actually show up, since the stale cached copy would always
+// win on the first load after a change. Network-first means you always get the latest push
+// immediately when there's a connection; the cache only kicks in when there's genuinely none.
 
-const CACHE_NAME = 'erics-lounge-v1';
+const CACHE_NAME = 'erics-lounge-v2';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -35,19 +40,15 @@ self.addEventListener('fetch', (event) => {
   const isShellFile = url.origin === self.location.origin;
 
   if (isShellFile) {
-    // App shell: cache-first, so it loads instantly and works offline.
     event.respondWith(
-      caches.match(req).then((cached) => {
-        const fetchPromise = fetch(req)
-          .then((res) => {
-            if (res && res.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));
-            }
-            return res;
-          })
-          .catch(() => cached);
-        return cached || fetchPromise;
-      })
+      fetch(req)
+        .then((res) => {
+          if (res && res.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req))
     );
   }
   // Everything else (weather API, Wikipedia, YouTube, news sites) — just let it

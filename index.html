@@ -70,32 +70,44 @@
 
   .stat-row{
     display:flex;
+    align-items:center;
     justify-content:center;
     gap:14px;
-    flex-wrap:wrap;
     margin-top:24px;
+  }
+  .stat-pills{
+    display:flex;
+    gap:14px;
+    flex:1;
+    max-width:520px;
   }
   .stat-pill{
     background:var(--card);
-    border-radius:999px;
-    padding:10px 20px;
+    border-radius:18px;
+    padding:10px 14px;
     display:flex;
+    flex:1;
+    flex-direction:column;
     align-items:center;
-    gap:10px;
+    justify-content:center;
+    gap:2px;
     box-shadow:0 3px 0 rgba(58,42,30,.08);
+    text-align:center;
   }
   .stat-pill .label{
-    font-size:11px;
+    font-size:10px;
     font-weight:700;
     text-transform:uppercase;
     letter-spacing:.06em;
     color:var(--ink-soft);
+    white-space:nowrap;
   }
   .stat-pill .value{
     font-family:'Space Mono', monospace;
     font-weight:700;
-    font-size:16px;
+    font-size:15px;
     color:var(--coral-dark);
+    white-space:nowrap;
   }
   .stat-pill.weekend .value{color:var(--teal);}
 
@@ -709,13 +721,15 @@
     <h1 class="title" id="titleLink">Mr Eric's Lounge</h1>
     <div class="subtitle" id="subtitleText">Today's news, fresh off the press</div>
     <div class="stat-row">
-      <div class="stat-pill">
-        <span class="label">Local time</span>
-        <span class="value" id="clock">--:--:--</span>
-      </div>
-      <div class="stat-pill weekend">
-        <span class="label">Weekend in</span>
-        <span class="value" id="weekendCountdown">--:--:--:--</span>
+      <div class="stat-pills">
+        <div class="stat-pill">
+          <span class="label">Local time</span>
+          <span class="value" id="clock">--:--:--</span>
+        </div>
+        <div class="stat-pill weekend">
+          <span class="label">Weekend in</span>
+          <span class="value" id="weekendCountdown">--:--:--:--</span>
+        </div>
       </div>
       <a class="search-icon-btn" href="#search" title="Search">🔍</a>
     </div>

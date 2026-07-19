@@ -597,6 +597,70 @@
     background:rgba(214,25,26,.88);
   }
   body.theme-watch .watch-channel{color:#B33;}
+
+  /* ---------- Sports tables ---------- */
+  .sports-tile{
+    background:var(--teal);
+    color:#fff;
+    border-radius:20px;
+    padding:26px 22px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    text-decoration:none;
+    box-shadow:0 3px 0 rgba(58,42,30,.15);
+  }
+  .sports-tile .icon{font-size:30px;}
+  .sports-tile .title{font-weight:800; font-size:19px;}
+  .sports-tile .sub{font-size:13px; color:#D8F0E9; font-weight:600; margin-top:2px;}
+
+  .league-block{margin-bottom:28px;}
+  .league-head{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    margin-bottom:4px;
+  }
+  .league-head .flag{font-size:18px;}
+  .league-head h3{font-family:'Baloo 2', sans-serif; font-weight:800; font-size:17px; color:var(--ink);}
+  .league-note{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  .league-table-wrap{overflow-x:auto; border-radius:14px; box-shadow:0 2px 0 rgba(58,42,30,.06);}
+  table.league-table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--card);
+    font-size:12.5px;
+    min-width:480px;
+  }
+  table.league-table th{
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--ink-soft);
+    text-align:center;
+    padding:8px 6px;
+    border-bottom:1.5px solid var(--line);
+  }
+  table.league-table th:first-child, table.league-table td:first-child{text-align:left; padding-left:12px;}
+  table.league-table td{
+    padding:7px 6px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+    font-weight:600;
+  }
+  table.league-table td.team-name{
+    text-align:left;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  table.league-table td.pos{color:var(--ink-soft); font-weight:700;}
+  table.league-table tr:last-child td{border-bottom:none;}
 </style>
 </head>
 <body>
@@ -722,6 +786,55 @@ const PHOTOS = [
   { url:"photos/monkey-selfie-01.png", caption:"First upload — testing, testing", date:"2026-07-19" },
 ];
 
+// Sports — league tables. As of build time (19 Jul 2026), only the Uzbek Super League is
+// mid-season; the five European leagues and the KHL are in their off-season (2026-27 hasn't
+// kicked off yet), so those tables are shown with every team at 0 played, per Eric's request.
+// Update the Uzbek rows periodically by asking Claude to refresh from a live source.
+function zeroRows(names){
+  return names.map(name => ({ name, pld:0, w:0, d:0, l:0, gf:0, ga:0, pts:0 }));
+}
+const SPORTS_LEAGUES = [
+  {
+    name: "Uzbekistan Super League", flag: "🇺🇿", note: "Live — round 11",
+    teams: [
+      { name:"Neftchi Fergana", pld:11, w:9, d:1, l:1, gf:25, ga:3, pts:28 },
+      { name:"Pakhtakor", pld:11, w:8, d:2, l:1, gf:22, ga:12, pts:26 },
+      { name:"Buxoro FK", pld:11, w:6, d:2, l:3, gf:15, ga:11, pts:20 },
+      { name:"Navbahor Namangan", pld:11, w:6, d:2, l:3, gf:14, ga:8, pts:20 },
+      { name:"Bunyodkor", pld:11, w:6, d:1, l:4, gf:13, ga:11, pts:19 },
+      { name:"Lokomotiv Tashkent", pld:11, w:5, d:2, l:4, gf:14, ga:14, pts:17 },
+      { name:"FC OKMK Olmaliq", pld:11, w:4, d:4, l:3, gf:14, ga:14, pts:16 },
+      { name:"FK Andijon", pld:11, w:5, d:1, l:5, gf:16, ga:11, pts:16 },
+      { name:"Nasaf Qarshi", pld:11, w:3, d:5, l:3, gf:12, ga:11, pts:14 },
+      { name:"Xorazm Urganch", pld:11, w:3, d:4, l:4, gf:9, ga:13, pts:13 },
+      { name:"Qizilqum Zarafshon", pld:11, w:4, d:1, l:6, gf:8, ga:15, pts:13 },
+    ],
+  },
+  {
+    name: "English Premier League", flag: "🏴", note: "Pre-season — starts 21 Aug 2026",
+    teams: zeroRows(["Arsenal","Aston Villa","Bournemouth","Brentford","Brighton","Chelsea","Coventry City","Crystal Palace","Everton","Fulham","Hull City","Ipswich Town","Leeds United","Liverpool","Manchester City","Manchester United","Newcastle United","Nottingham Forest","Sunderland","Tottenham Hotspur"]),
+  },
+  {
+    name: "Italian Serie A", flag: "🇮🇹", note: "Pre-season — starts 23 Aug 2026",
+    teams: zeroRows(["Atalanta","Bologna","Cagliari","Como","Fiorentina","Frosinone","Genoa","Inter Milan","Juventus","Lazio","Lecce","AC Milan","Monza","Napoli","Parma","Roma","Sassuolo","Torino","Udinese","Venezia"]),
+  },
+  {
+    name: "Spanish La Liga", flag: "🇪🇸", note: "Pre-season — starts mid-Aug 2026",
+    teams: zeroRows(["Alavés","Athletic Bilbao","Atlético Madrid","Barcelona","Celta Vigo","Deportivo La Coruña","Elche","Espanyol","Getafe","Levante","Osasuna","Racing Santander","Rayo Vallecano","Real Betis","Real Madrid","Real Sociedad","Sevilla","Valencia","Villarreal","TBD (playoff winner)"]),
+  },
+  {
+    name: "French Ligue 1", flag: "🇫🇷", note: "Pre-season — starts 23 Aug 2026",
+    teams: zeroRows(["Angers","Auxerre","Brest","Le Havre","Le Mans","Lens","Lille","Lorient","Lyon","Marseille","Monaco","Nice","Paris FC","Paris Saint-Germain","Rennes","Strasbourg","Toulouse","Troyes"]),
+  },
+  {
+    name: "German Bundesliga", flag: "🇩🇪", note: "Pre-season — starts 28 Aug 2026",
+    teams: zeroRows(["FC Augsburg","Bayern Munich","Bayer Leverkusen","Borussia Dortmund","Eintracht Frankfurt","SC Freiburg","Hamburger SV","TSG Hoffenheim","1. FC Köln","RB Leipzig","Mainz 05","Borussia Mönchengladbach","SC Paderborn","SV Elversberg","Schalke 04","VfB Stuttgart","Union Berlin","Werder Bremen"]),
+  },
+  {
+    name: "KHL", flag: "🏒", note: "Off-season — starts 5 Sep 2026",
+    teams: zeroRows(["Admiral Vladivostok","Ak Bars Kazan","Amur Khabarovsk","Avangard Omsk","Avtomobilist Ekaterinburg","Barys Astana","CSKA Moscow","Dinamo Minsk","Dynamo Moscow","Lada Togliatti","Lokomotiv Yaroslavl","Metallurg Magnitogorsk","Neftekhimik Nizhnekamsk","Salavat Yulaev Ufa","Severstal Cherepovets","Shanghai Dragons","Sibir Novosibirsk","SKA Saint Petersburg","Spartak Moscow","HC Sochi","Torpedo Nizhny Novgorod","Traktor Chelyabinsk"]),
+  },
+];
 // YouTube videos. videoId is the part after 'v=' or after 'youtu.be/' in the URL. Each video belongs to one faculty.
 const WATCH_VIDEOS = [
   { title:"Mini Countries Abroad: How Embassies Work", channel:"Wendover Productions", videoId:"SUsqnD9-42g", faculty:"international-relations" },
@@ -993,6 +1106,48 @@ function viewPhotos(){
   `;
 }
 
+function leagueTableHtml(league){
+  const rows = league.teams.map((t, i) => `
+    <tr>
+      <td class="pos">${i + 1}</td>
+      <td class="team-name">${escapeHtml(t.name)}</td>
+      <td>${t.pld}</td>
+      <td>${t.w}</td>
+      <td>${t.d}</td>
+      <td>${t.l}</td>
+      <td>${t.gf}:${t.ga}</td>
+      <td>${t.gf - t.ga}</td>
+      <td><strong>${t.pts}</strong></td>
+    </tr>
+  `).join('');
+  return `
+    <div class="league-block">
+      <div class="league-head"><span class="flag">${league.flag}</span><h3>${escapeHtml(league.name)}</h3></div>
+      <div class="league-note">${escapeHtml(league.note)}</div>
+      <div class="league-table-wrap">
+        <table class="league-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF:GA</th><th>GD</th><th>Pts</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function viewSports(){
+  return `
+    <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
+    <section style="padding-top:14px;">
+      <div class="section-head"><span class="emoji">⚽</span><h2>Sports — League Tables</h2></div>
+      ${SPORTS_LEAGUES.map(leagueTableHtml).join('')}
+    </section>
+  `;
+}
+
 /* ---- Sports, Students, Recommendations, Birthdays (home page only) ---- */
 
 function sportsHtml(){
@@ -1149,6 +1304,16 @@ function viewHome(){
     </section>
 
     <section>
+      <a class="sports-tile" href="#sports">
+        <span class="icon">⚽</span>
+        <div>
+          <div class="title">Sports</div>
+          <div class="sub">League tables — EPL, Serie A, La Liga, Ligue 1, Bundesliga, Uzbek League, KHL</div>
+        </div>
+      </a>
+    </section>
+
+    <section>
       <div class="section-head"><span class="emoji">🎂</span><h2>Birthdays</h2></div>
       ${birthdaysHtml()}
     </section>
@@ -1247,6 +1412,8 @@ function renderRoute(){
     html = viewSearch();
   } else if(parts[0] === 'photos'){
     html = viewPhotos();
+  } else if(parts[0] === 'sports'){
+    html = viewSports();
   } else {
     html = viewHome();
   }

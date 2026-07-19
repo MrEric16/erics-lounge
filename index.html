@@ -316,33 +316,7 @@
   }
   .otd-card a{color:#fff; text-decoration:underline;}
 
-  /* ---------- Today is ___ Day ---------- */
-  .ntd-card{
-    background:linear-gradient(135deg, var(--gold) 0%, var(--coral) 100%);
-    color:#fff;
-    border-radius:20px;
-    padding:26px 22px;
-    text-align:center;
-  }
-  .ntd-label{
-    font-family:'Space Mono', monospace;
-    font-size:12px;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    opacity:.85;
-  }
-  .ntd-name{
-    font-family:'Baloo 2', sans-serif;
-    font-weight:800;
-    font-size:26px;
-    margin-top:6px;
-  }
-  .ntd-source{
-    font-size:11px;
-    font-weight:600;
-    opacity:.8;
-    margin-top:10px;
-  }
+
 
   /* ---------- Mood meter ---------- */
   .mood-row{display:flex; gap:10px;}
@@ -684,11 +658,6 @@ const DISPATCHES = [
 
 const ARSENAL_NEXT_FIXTURE = "Girona vs Arsenal (Away) — Pre-season Friendly — Estadi Municipal de Montilivi — Sat 1 Aug 2026, 23:00 (Tashkent time)";
 
-// "Today is ___ Day" — sourced from nationaltoday.com. No live cross-site fetch is possible (nationaltoday.com
-// has no public API and blocks cross-origin requests), so this is baked in manually and needs refreshing
-// periodically — same pattern as the Arsenal fixture. Update the date + name when it goes stale.
-const TODAY_NATIONAL_DAY = { name: "National Ice Cream Day", date: "2026-07-19" };
-
 // Students of the week — add as many as you like. photoUrl gets embedded directly when Eric sends a photo.
 const STUDENTS_OF_WEEK = [
   // { name:"Student Name", note:"Why they earned it", photoUrl:"" },
@@ -1023,22 +992,6 @@ function birthdaysHtml(){
   }).join('')}</div>`;
 }
 
-function nationalDayHtml(){
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth()+1).padStart(2,'0');
-  const dd = String(now.getDate()).padStart(2,'0');
-  const todayStr = `${yyyy}-${mm}-${dd}`;
-  if(TODAY_NATIONAL_DAY.date === todayStr){
-    return `<div class="ntd-card">
-      <div class="ntd-label">Happy</div>
-      <div class="ntd-name">${escapeHtml(TODAY_NATIONAL_DAY.name)}</div>
-      <div class="ntd-source">via nationaltoday.com</div>
-    </div>`;
-  }
-  return '<div class="empty-card">Ask Mr Eric to update today\'s holiday!</div>';
-}
-
 /* ---- Views ---- */
 
 function viewHome(){
@@ -1125,11 +1078,6 @@ function viewHome(){
     <section>
       <div class="section-head"><span class="emoji">🎂</span><h2>Birthdays</h2></div>
       ${birthdaysHtml()}
-    </section>
-
-    <section>
-      <div class="section-head"><span class="emoji">🎉</span><h2>Today Is...</h2></div>
-      ${nationalDayHtml()}
     </section>
   `;
 }

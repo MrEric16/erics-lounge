@@ -109,6 +109,13 @@
     color:var(--coral-dark);
     white-space:nowrap;
   }
+  .stat-pill .date{
+    font-family:'Space Mono', monospace;
+    font-weight:600;
+    font-size:11px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
   .stat-pill.weekend .value{color:var(--teal);}
 
   /* ---------- Section shell ---------- */
@@ -507,6 +514,21 @@
   .photo-tile .title{font-weight:800; font-size:19px;}
   .photo-tile .sub{font-size:13px; color:#FBE4D1; font-weight:600; margin-top:2px;}
 
+  .goodnews-tile{
+    background:var(--gold);
+    color:#fff;
+    border-radius:20px;
+    padding:26px 22px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    text-decoration:none;
+    box-shadow:0 3px 0 rgba(58,42,30,.15);
+  }
+  .goodnews-tile .icon{font-size:30px;}
+  .goodnews-tile .title{font-weight:800; font-size:19px;}
+  .goodnews-tile .sub{font-size:13px; color:#FFF3DC; font-weight:600; margin-top:2px;}
+
   .photo-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
@@ -725,6 +747,7 @@
         <div class="stat-pill">
           <span class="label">Local time</span>
           <span class="value" id="clock">--:--:--</span>
+          <span class="date" id="clockDate">--/--/----</span>
         </div>
         <div class="stat-pill weekend">
           <span class="label">Weekend in</span>
@@ -1588,13 +1611,23 @@ function viewHome(){
     </section>
 
     <section>
-      <div class="section-head"><span class="emoji">📰</span><h2>Latest Dispatches</h2><a class="section-link" href="#faculty/all">See full archive →</a></div>
+      <div class="section-head"><span class="emoji">📰</span><h2>Latest Articles</h2><a class="section-link" href="#faculty/all">See full archive →</a></div>
       ${dispatchListHtml(recent)}
     </section>
 
     <section>
       <div class="section-head"><span class="emoji">🏆</span><h2>Home of the Premier League Champions</h2></div>
       ${sportsHtml()}
+    </section>
+
+    <section>
+      <a class="goodnews-tile" href="https://www.goodgoodgood.co/goodnews" target="_blank" rel="noopener">
+        <span class="icon">🌤️</span>
+        <div>
+          <div class="title">Good News Only</div>
+          <div class="sub">A break from the doom and gloom</div>
+        </div>
+      </a>
     </section>
 
     <section>
@@ -1838,6 +1871,8 @@ function updateClock(){
   const now = new Date();
   document.getElementById('clock').textContent =
     `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  document.getElementById('clockDate').textContent =
+    `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
 }
 
 /* ---- Weekend countdown ---- */

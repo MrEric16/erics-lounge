@@ -1353,38 +1353,33 @@ function dispatchListHtml(list){
     return '<div class="empty-card">Tumbleweeds. Nothing filed here yet.</div>';
   }
   const sorted = [...list].sort((a,b)=> b.date.localeCompare(a.date));
-  const groups = {};
-  sorted.forEach(a=>{ (groups[a.date] = groups[a.date] || []).push(a); });
 
   let html = '';
-  Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
-    html += `<div class="day-badge">${fmtDayHeader(date)}</div>`;
-    groups[date].forEach(a=>{
-      const fac = FAC_MAP[a.faculty] || { label:a.faculty, color:'#999' };
-      const key = reactionKey(a.url);
-      const saved = getReaction(key);
-      const readLabel = a.read ? `${a.read} read` : '';
-      html += `
-        <div class="entry">
-          <div class="entry-row">
-            <div class="tag" style="background:${fac.color}">${fac.label}</div>
-            <div class="entry-body">
-              <a class="headline" href="${a.url}" rel="noopener">${escapeHtml(a.headline)}</a>
-              <div class="entry-meta">
-                ${readLabel ? `<div>${readLabel}</div>` : ''}
-                <div>${escapeHtml(sourceName(a.url))}</div>
-              </div>
-              <div class="entry-actions">
-                <button class="react-btn ${saved==='like'?'active':''}" data-key="${key}" data-emoji="like" title="Liked it">${icon('like')}</button>
-                <button class="react-btn ${saved==='surprised'?'active':''}" data-key="${key}" data-emoji="surprised" title="Surprised me">${icon('surprised')}</button>
-                <button class="react-btn ${saved==='thinking'?'active':''}" data-key="${key}" data-emoji="thinking" title="Made me think">${icon('thinking')}</button>
-                <button class="bookmark-btn ${isBookmarked(a.url)?'active':''}" data-url="${a.url}" data-title="${escapeHtml(a.headline)}" data-faculty="${a.faculty}" data-date="${a.date}" title="Save for later">${isBookmarked(a.url)?icon('bookmarkFilled'):icon('bookmark')}</button>
-                <button class="share-btn" data-url="${a.url}" data-title="${escapeHtml(a.headline)}">Share</button>
-              </div>
+  sorted.forEach(a=>{
+    const fac = FAC_MAP[a.faculty] || { label:a.faculty, color:'#999' };
+    const key = reactionKey(a.url);
+    const saved = getReaction(key);
+    const readLabel = a.read ? `${a.read} read` : '';
+    html += `
+      <div class="entry">
+        <div class="entry-row">
+          <div class="tag" style="background:${fac.color}">${fac.label}</div>
+          <div class="entry-body">
+            <a class="headline" href="${a.url}" rel="noopener">${escapeHtml(a.headline)}</a>
+            <div class="entry-meta">
+              ${readLabel ? `<div>${readLabel}</div>` : ''}
+              <div>${escapeHtml(sourceName(a.url))}</div>
+            </div>
+            <div class="entry-actions">
+              <button class="react-btn ${saved==='like'?'active':''}" data-key="${key}" data-emoji="like" title="Liked it">${icon('like')}</button>
+              <button class="react-btn ${saved==='surprised'?'active':''}" data-key="${key}" data-emoji="surprised" title="Surprised me">${icon('surprised')}</button>
+              <button class="react-btn ${saved==='thinking'?'active':''}" data-key="${key}" data-emoji="thinking" title="Made me think">${icon('thinking')}</button>
+              <button class="bookmark-btn ${isBookmarked(a.url)?'active':''}" data-url="${a.url}" data-title="${escapeHtml(a.headline)}" data-faculty="${a.faculty}" data-date="${a.date}" title="Save for later">${isBookmarked(a.url)?icon('bookmarkFilled'):icon('bookmark')}</button>
+              <button class="share-btn" data-url="${a.url}" data-title="${escapeHtml(a.headline)}">Share</button>
             </div>
           </div>
-        </div>`;
-    });
+        </div>
+      </div>`;
   });
   return html;
 }
@@ -2915,9 +2910,11 @@ function viewHome(){
 
   const facTiles = FACULTIES.map(f=>{
     const count = DISPATCHES.filter(a=>a.faculty===f.key).length;
+    const videoCount = WATCH_VIDEOS.filter(v=>v.faculty===f.key).length;
     return `<a class="fac-tile" href="#faculty/${f.key}">
       <span class="name"><span class="fac-icon" style="color:${f.color}">${icon(f.icon)}</span>${f.label}</span>
       <span class="count">${count} stories</span>
+      <span class="count">${videoCount} videos</span>
     </a>`;
   }).join('');
 
@@ -2927,8 +2924,12 @@ function viewHome(){
       <div class="faculties">
         ${facTiles}
         <a class="fac-tile all" href="#faculty/all">
-          <span class="name">All Domains — Full Archive</span>
+          <span class="name">All Domains — Full Articles Archive</span>
           <span class="count">${DISPATCHES.length} total</span>
+        </a>
+        <a class="fac-tile all" href="#watch/all">
+          <span class="name">All Domains — Full Video Archives</span>
+          <span class="count">${WATCH_VIDEOS.length} total</span>
         </a>
       </div>
     </section>
@@ -3051,7 +3052,7 @@ function viewFaculty(key){
     return `
       <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
       <section style="padding-top:14px;">
-        <div class="section-head"><span class="emoji">${icon('newspaper')}</span><h2>All Domains — Full Archive</h2></div>
+        <div class="section-head"><span class="emoji">${icon('newspaper')}</span><h2>All Domains — Full Articles Archive</h2></div>
         ${dispatchListHtml(DISPATCHES)}
       </section>
     `;
@@ -3104,7 +3105,7 @@ function viewWatchFaculty(key){
     return `
       <a class="back-link" href="#watch">← Back to Watch</a>
       <section style="padding-top:14px;">
-        <div class="section-head"><span class="emoji">${icon('clapper')}</span><h2>All Videos</h2></div>
+        <div class="section-head"><span class="emoji">${icon('clapper')}</span><h2>All Domains — Full Video Archives</h2></div>
         <div class="watch-grid" id="watchGridTarget">${watchGridHtml(WATCH_VIDEOS, 'all')}</div>
       </section>
     `;

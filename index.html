@@ -2584,9 +2584,9 @@ function viewSearch(){
     <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
     <section style="padding-top:14px;">
       <div class="section-head"><span class="emoji">${icon('search')}</span><h2>Search</h2></div>
-      <input class="search-input" id="searchInput" type="text" placeholder="Search dispatches by headline…" autofocus>
+      <input class="search-input" id="searchInput" type="text" placeholder="Search articles and videos…" autofocus>
       <div id="searchResults" style="margin-top:20px;">
-        <div class="empty-card">Go on, type something. We both know you're curious. (${DISPATCHES.length} dispatches waiting)</div>
+        <div class="empty-card">Go on, type something. We both know you're curious. (${DISPATCHES.length} dispatches, ${WATCH_VIDEOS.length} videos waiting)</div>
       </div>
     </section>
   `;
@@ -2599,12 +2599,29 @@ function wireSearch(container){
   input.addEventListener('input', ()=>{
     const q = input.value.trim().toLowerCase();
     if(q.length === 0){
-      results.innerHTML = `<div class="empty-card">Go on, type something. We both know you're curious. (${DISPATCHES.length} dispatches waiting)</div>`;
+      results.innerHTML = `<div class="empty-card">Go on, type something. We both know you're curious. (${DISPATCHES.length} dispatches, ${WATCH_VIDEOS.length} videos waiting)</div>`;
       return;
     }
-    const matches = DISPATCHES.filter(a => a.headline.toLowerCase().includes(q));
-    results.innerHTML = dispatchListHtml(matches);
+    const articleMatches = DISPATCHES.filter(a => a.headline.toLowerCase().includes(q));
+    const videoMatches = WATCH_VIDEOS.filter(v => v.title.toLowerCase().includes(q));
+
+    if(articleMatches.length === 0 && videoMatches.length === 0){
+      results.innerHTML = `<div class="empty-card">Nothing found for "${escapeHtml(input.value.trim())}". Try something else.</div>`;
+      return;
+    }
+
+    let html = '';
+    if(articleMatches.length > 0){
+      html += `<div class="section-head" style="margin-top:0;"><span class="emoji">${icon('newspaper')}</span><h2>Articles</h2></div>`;
+      html += dispatchListHtml(articleMatches);
+    }
+    if(videoMatches.length > 0){
+      html += `<div class="section-head" style="margin-top:${articleMatches.length>0?'24px':'0'};"><span class="emoji">${icon('clapper')}</span><h2>Videos</h2></div>`;
+      html += `<div class="watch-grid">${watchGridHtml(videoMatches, 'search')}</div>`;
+    }
+    results.innerHTML = html;
     wireEntryActions(results);
+    wireWatchButtons(results);
   });
 }
 

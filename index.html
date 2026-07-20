@@ -1123,9 +1123,13 @@ const ARSENAL_FIXTURES = [
   { title:"Sunderland v Arsenal", venue:"(Away)", competition:"Premier League", stadium:"Stadium of Light", start:"2026-09-13T00:00:00+05:00" },
   { title:"Brighton and Hove Albion v Arsenal", venue:"(Away)", competition:"Premier League", stadium:"American Express Stadium", start:"2026-09-19T19:00:00+05:00" },
 ];
+// Set by loadLiveSportsData() once a real fetched fixture is available; takes priority over the
+// static list above (which stays as a fallback for when the API is unreachable or not yet loaded).
+let LIVE_ARSENAL_FIXTURE = null;
 function getNextArsenalFixture(){
   const now = new Date();
-  const upcoming = ARSENAL_FIXTURES
+  const pool = LIVE_ARSENAL_FIXTURE ? [LIVE_ARSENAL_FIXTURE, ...ARSENAL_FIXTURES] : ARSENAL_FIXTURES;
+  const upcoming = pool
     .map(f => ({ ...f, dateObj: new Date(f.start) }))
     .filter(f => f.dateObj > now)
     .sort((a,b) => a.dateObj - b.dateObj);
@@ -1243,6 +1247,116 @@ const SPORTS_LEAGUES = [
     ],
   },
 ];
+// ---- Live league tables & Arsenal fixtures (football-data.org, free tier) ----
+// Free tier covers: Premier League, La Liga, Bundesliga, Serie A, Ligue 1. Uzbekistan Super
+// League, UAE Pro League and KHL aren't on the free tier and stay manually maintained above.
+// Refreshes at most once per "day", where the day rolls over at 04:00 Tashkent time (when most
+// games from the previous evening will have finished) — not on every page load, to stay well
+// inside the free tier's 10-requests/minute limit shared across all site visitors.
+const FOOTBALL_DATA_API_KEY = "d528304b9e9948aa91dbe180beb5bdda";
+const FOOTBALL_COMPETITION_MAP = {
+  "English Premier League": "PL",
+  "Spanish La Liga": "PD",
+  "German Bundesliga": "BL1",
+  "Italian Serie A": "SA",
+  "French Ligue 1": "FL1",
+};
+const ARSENAL_TEAM_ID = 57;
+const SPORTS_CACHE_KEY = "sportsLiveCache_v1";
+
+function tashkentEffectiveDay(){
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tashkent', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', hour12:false
+  }).formatToParts(new Date());
+  const get = t => parts.find(p=>p.type===t).value;
+  const y = +get('year'), mo = +get('month'), d = +get('day'), h = +get('hour');
+  const dayObj = new Date(Date.UTC(y, mo-1, d));
+  if(h < 4){ dayObj.setUTCDate(dayObj.getUTCDate() - 1); }
+  return dayObj.toISOString().slice(0,10);
+}
+function utcToTashkentISOString(utcDateStr){
+  const t = new Date(new Date(utcDateStr).getTime() + 5*60*60*1000);
+  const pad = n => String(n).padStart(2,'0');
+  return `${t.getUTCFullYear()}-${pad(t.getUTCMonth()+1)}-${pad(t.getUTCDate())}T${pad(t.getUTCHours())}:${pad(t.getUTCMinutes())}:${pad(t.getUTCSeconds())}+05:00`;
+}
+
+let sportsDataLoadPromise = null;
+async function loadLiveSportsData(){
+  // Only ever run the actual fetch-and-cache logic once per page session; repeated calls
+  // (home page, then sports tables, then back again) just re-apply what's already in memory.
+  if(!sportsDataLoadPromise){
+    sportsDataLoadPromise = (async () => {
+      const today = tashkentEffectiveDay();
+      let cache = null;
+      try{ cache = JSON.parse(localStorage.getItem(SPORTS_CACHE_KEY)); }catch(e){}
+
+      if(!cache || cache.day !== today){
+        const fresh = { day: today, leagues: {}, arsenalFixture: null };
+        for(const [leagueName, code] of Object.entries(FOOTBALL_COMPETITION_MAP)){
+          try{
+            const res = await fetch(`https://api.football-data.org/v4/competitions/${code}/standings`, {
+              headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
+            });
+            if(!res.ok) throw new Error('bad response '+res.status);
+            const data = await res.json();
+            const totalTable = (data.standings || []).find(s => s.type === 'TOTAL');
+            if(totalTable && totalTable.table && totalTable.table.length && totalTable.table.some(row => row.playedGames > 0)){
+              fresh.leagues[leagueName] = totalTable.table.map(row => ({
+                name: row.team.shortName || row.team.name,
+                pld: row.playedGames, w: row.won, d: row.draw, l: row.lost,
+                gf: row.goalsFor, ga: row.goalsAgainst, pts: row.points,
+              }));
+            }
+          }catch(e){ /* this league's data stays as-is (static placeholder or older cache) */ }
+        }
+        try{
+          const res = await fetch(`https://api.football-data.org/v4/teams/${ARSENAL_TEAM_ID}/matches?status=SCHEDULED&limit=1`, {
+            headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
+          });
+          if(!res.ok) throw new Error('bad response '+res.status);
+          const data = await res.json();
+          const m = (data.matches || [])[0];
+          if(m && m.homeTeam && m.awayTeam){
+            const isHome = m.homeTeam.id === ARSENAL_TEAM_ID;
+            const opponent = isHome ? (m.awayTeam.shortName || m.awayTeam.name) : (m.homeTeam.shortName || m.homeTeam.name);
+            fresh.arsenalFixture = {
+              title: isHome ? `Arsenal v ${opponent}` : `${opponent} v Arsenal`,
+              venue: isHome ? "(Home)" : "(Away)",
+              competition: m.competition ? m.competition.name : "",
+              stadium: m.venue || "",
+              start: utcToTashkentISOString(m.utcDate),
+            };
+          }
+        }catch(e){ /* Arsenal fixture stays on the static fallback list */ }
+
+        if(Object.keys(fresh.leagues).length > 0 || fresh.arsenalFixture){
+          cache = fresh;
+          try{ localStorage.setItem(SPORTS_CACHE_KEY, JSON.stringify(cache)); }catch(e){}
+        }
+      }
+
+      if(cache && cache.leagues){
+        SPORTS_LEAGUES.forEach(league => {
+          const liveTeams = cache.leagues[league.name];
+          if(liveTeams && liveTeams.length){
+            league.teams = liveTeams;
+            league.note = "Live — updates daily at 04:00 Tashkent time";
+          }
+        });
+      }
+      if(cache && cache.arsenalFixture){
+        LIVE_ARSENAL_FIXTURE = cache.arsenalFixture;
+      }
+    })();
+  }
+  await sportsDataLoadPromise;
+
+  // Patch whichever bit of the currently-visible page depends on this data.
+  const tablesEl = document.getElementById('leagueTablesContainer');
+  if(tablesEl) tablesEl.innerHTML = SPORTS_LEAGUES.map(leagueTableHtml).join('');
+  const fixtureEl = document.getElementById('nextFixtureText');
+  if(fixtureEl) fixtureEl.innerHTML = arsenalFixtureText();
+}
 // YouTube videos. videoId is the part after 'v=' or after 'youtu.be/' in the URL. Each video belongs to one faculty.
 const WATCH_VIDEOS = [
   { title:"Mini Countries Abroad: How Embassies Work", channel:"Wendover Productions", videoId:"SUsqnD9-42g", faculty:"international-relations" },
@@ -2814,7 +2928,7 @@ function viewSports(){
     <a class="back-link" href="#sports">← Back to Sports</a>
     <section style="padding-top:14px;">
       <div class="section-head"><span class="emoji">${icon('ball')}</span><h2>Sports — League Tables</h2></div>
-      ${SPORTS_LEAGUES.map(leagueTableHtml).join('')}
+      <div id="leagueTablesContainer">${SPORTS_LEAGUES.map(leagueTableHtml).join('')}</div>
     </section>
   `;
 }
@@ -2831,7 +2945,7 @@ function sportsHtml(){
           <div class="sub">Next fixture</div>
         </div>
       </div>
-      <div class="next-fixture"><span class="label">Next up</span>${arsenalFixtureText()}</div>
+      <div class="next-fixture"><span class="label">Next up</span><span id="nextFixtureText">${arsenalFixtureText()}</span></div>
     </div>`;
 }
 
@@ -3265,7 +3379,8 @@ function renderRoute(){
   wireEntryActions(app);
   if(parts[0] === 'photos') wirePhotoLightbox(app);
   if(parts[0] === 'search') wireSearch(app);
-  if(parts.length === 0){ loadOnThisDay(); loadWeather(); wireRandomButton(app); wireRandomVideoButton(app); checkAchievements(); }
+  if(parts.length === 0){ loadOnThisDay(); loadWeather(); loadLiveSportsData(); wireRandomButton(app); wireRandomVideoButton(app); checkAchievements(); }
+  if(parts[0] === 'sports' && parts[1] === 'tables'){ loadLiveSportsData(); }
 
   // Swipe between sibling domain pages (item 1)
   if(parts[0] === 'faculty' && parts[1] && parts[1] !== 'all'){

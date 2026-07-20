@@ -3061,11 +3061,16 @@ function viewFaculty(key){
     return `<a class="back-link" href="#">← Back to Mr Eric's Lounge</a><div class="empty-card" style="margin-top:20px;">Unknown domain.</div>`;
   }
   const list = DISPATCHES.filter(a=>a.faculty===key);
+  const videos = WATCH_VIDEOS.filter(v=>v.faculty===key);
   return `
     <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
     <section style="padding-top:14px;">
-      <div class="section-head"><span class="fac-icon" style="color:${fac.color}">${icon(fac.icon)}</span><h2>${fac.label}</h2></div>
+      <div class="section-head"><span class="fac-icon" style="color:${fac.color}">${icon(fac.icon)}</span><h2>${fac.label} — Articles</h2></div>
       ${dispatchListHtml(list)}
+    </section>
+    <section style="padding-top:14px;">
+      <div class="section-head"><span class="fac-icon" style="color:${fac.color}">${icon(fac.icon)}</span><h2>${fac.label} — Videos</h2></div>
+      <div class="watch-grid">${watchGridHtml(videos, 'fac-'+key)}</div>
     </section>
   `;
 }

@@ -2603,7 +2603,7 @@ function wireSearch(container){
       return;
     }
     const articleMatches = DISPATCHES.filter(a => a.headline.toLowerCase().includes(q));
-    const videoMatches = WATCH_VIDEOS.filter(v => v.title.toLowerCase().includes(q));
+    const videoMatches = WATCH_VIDEOS.filter(v => v.title.toLowerCase().includes(q) || v.channel.toLowerCase().includes(q));
 
     if(articleMatches.length === 0 && videoMatches.length === 0){
       results.innerHTML = `<div class="empty-card">Nothing found for "${escapeHtml(input.value.trim())}". Try something else.</div>`;

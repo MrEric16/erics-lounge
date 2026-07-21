@@ -628,6 +628,21 @@
   .goodnews-tile .title{font-weight:800; font-size:19px;}
   .goodnews-tile .sub{font-size:13px; color:#FFF3DC; font-weight:600; margin-top:2px;}
 
+  .books-tile{
+    background:var(--teal);
+    color:#fff;
+    border-radius:20px;
+    padding:26px 22px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    text-decoration:none;
+    box-shadow:0 3px 0 rgba(58,42,30,.15);
+  }
+  .books-tile .icon{display:inline-flex; align-items:center;} .books-tile .icon svg{width:30px;height:30px;}
+  .books-tile .title{font-weight:800; font-size:19px;}
+  .books-tile .sub{font-size:13px; color:#EAF3E0; font-weight:600; margin-top:2px;}
+
   .photo-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
@@ -3531,6 +3546,16 @@ function viewHome(){
         <div>
           <div class="title">Good News Only</div>
           <div class="sub">A break from the doom and gloom</div>
+        </div>
+      </a>
+    </section>
+
+    <section>
+      <a class="books-tile" href="https://welib.st" target="_blank" rel="noopener">
+        <span class="icon">${icon('book')}</span>
+        <div>
+          <div class="title">Read, listen, download books</div>
+          <div class="sub">140 million books and journals, right here, right now</div>
         </div>
       </a>
     </section>

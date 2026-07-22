@@ -924,12 +924,17 @@
   }
   .watch-info{padding:10px 12px 14px 12px;}
   .watch-title{font-weight:700; font-size:14px; line-height:1.3;}
+  .watch-channel-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    margin-top:4px;
+  }
   .watch-channel{
     font-family:'Space Mono', monospace;
     font-size:11px;
     color:var(--ink-soft);
-    margin-top:4px;
   }
+  .watch-channel-row .bookmark-btn{ width:28px; height:28px; flex-shrink:0; }
+  .watch-channel-row .bookmark-btn svg{ width:16px; height:16px; }
 
   /* ---------- Birthdays ---------- */
   .bday-tile-card{
@@ -1108,7 +1113,7 @@
   .match-row .match-teams{font-weight:700; color:var(--ink);}
   .match-row .match-score{font-family:'Space Mono', monospace; font-weight:700; color:var(--teal); margin:0 6px;}
   .match-row .match-date{font-family:'Space Mono', monospace; font-size:11px; color:var(--ink-soft); white-space:nowrap;}
-  /* ---------- Bottom tab bar (home page only) ---------- */
+  /* ---------- Bottom tab bar (all pages) ---------- */
   .bottom-tabs{
     display:none;
     position:fixed;
@@ -1138,6 +1143,49 @@
   .bottom-tabs a:active{ opacity:.6; }
   @media (hover:hover){
     .bottom-tabs a:hover{ color:var(--coral); }
+  }
+
+  /* ---------- Invite a friend / Install ---------- */
+  .invite-link{
+    display:inline-block;
+    color:var(--coral-dark);
+    font-weight:700;
+    text-decoration:none;
+    font-size:15px;
+    padding:8px 16px;
+  }
+  .invite-link:active{ opacity:.6; }
+  .invite-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:28px 20px;
+    text-align:center;
+    margin-top:14px;
+  }
+  .invite-qr{
+    width:220px; height:220px; max-width:100%;
+    border-radius:14px;
+    background:#fff;
+    padding:10px;
+    display:block;
+    margin:0 auto 18px;
+  }
+  .invite-title{ font-family:'Baloo 2', sans-serif; font-weight:700; font-size:20px; color:var(--ink); margin-bottom:8px; }
+  .invite-sub{ font-size:13px; color:var(--ink-soft); line-height:1.5; max-width:320px; margin:0 auto; }
+  .install-text{ color:var(--ink-soft); font-size:14px; line-height:1.6; max-width:340px; margin:10px auto 0; }
+  .install-steps{ max-width:340px; margin:20px auto 0; text-align:left; }
+  .install-step{
+    display:flex; align-items:center; gap:12px;
+    background:var(--card); border:1px solid var(--line);
+    border-radius:12px; padding:12px 14px; margin-bottom:10px;
+    font-size:14px; color:var(--ink);
+  }
+  .install-step-num{
+    flex-shrink:0; width:24px; height:24px; border-radius:50%;
+    background:var(--coral-dark); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:13px;
   }
 </style>
 </head>
@@ -1173,6 +1221,19 @@
 <footer></footer>
 
 <script>
+/* ---- PWA install prompt capture (Android/Chrome only — iOS Safari has no such API) ----
+   Must be registered immediately, at the top of the script, because the browser can
+   fire this event before the user ever navigates to #install. If we miss it, there's
+   no way to ask for it again except a full page reload. */
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+});
+
 /* =========================================================
    EDITABLE CONTENT — everything below is plain data.
    To add/change something, edit the relevant array/object.
@@ -2090,7 +2151,7 @@ function dispatchListHtml(list){
               <button class="react-btn ${saved==='like'?'active':''}" data-key="${key}" data-emoji="like" title="Liked it">${icon('like')}</button>
               <button class="react-btn ${saved==='surprised'?'active':''}" data-key="${key}" data-emoji="surprised" title="Surprised me">${icon('surprised')}</button>
               <button class="react-btn ${saved==='thinking'?'active':''}" data-key="${key}" data-emoji="thinking" title="Made me think">${icon('thinking')}</button>
-              <button class="bookmark-btn ${isBookmarked(a.url)?'active':''}" data-url="${a.url}" data-title="${escapeHtml(a.headline)}" data-faculty="${a.faculty}" data-date="${a.date}" title="Save for later">${isBookmarked(a.url)?icon('bookmarkFilled'):icon('bookmark')}</button>
+              <button class="bookmark-btn ${isBookmarked(a.url)?'active':''}" data-key="${a.url}" data-type="article" data-url="${a.url}" data-title="${escapeHtml(a.headline)}" data-faculty="${a.faculty}" data-date="${a.date}" title="Save for later">${isBookmarked(a.url)?icon('bookmarkFilled'):icon('bookmark')}</button>
               <button class="share-btn" data-url="${a.url}" data-title="${escapeHtml(a.headline)}">Share</button>
             </div>
           </div>
@@ -2104,7 +2165,9 @@ function watchGridHtml(list, idPrefix){
   if(list.length===0){
     return '<div class="empty-card">Nothing to watch here. Yet. Patience, young padawan.</div>';
   }
-  return list.map((v,i) => `
+  return list.map((v,i) => {
+    const vKey = 'yt:' + v.videoId;
+    return `
     <div class="watch-card">
       <button class="watch-thumb" data-id="${v.videoId}" data-key="${idPrefix}-${i}" aria-label="Play ${escapeHtml(v.title)}">
         <img src="https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg" alt="${escapeHtml(v.title)}" loading="lazy">
@@ -2112,10 +2175,14 @@ function watchGridHtml(list, idPrefix){
       </button>
       <div class="watch-info">
         <div class="watch-title">${escapeHtml(v.title)}</div>
-        <div class="watch-channel">${escapeHtml(v.channel)}</div>
+        <div class="watch-channel-row">
+          <div class="watch-channel">${escapeHtml(v.channel)}</div>
+          <button class="bookmark-btn video-bookmark-btn ${isBookmarked(vKey)?'active':''}" data-key="${vKey}" data-type="video" data-videoid="${v.videoId}" data-title="${escapeHtml(v.title)}" data-channel="${escapeHtml(v.channel)}" data-faculty="${v.faculty}" title="Save for later">${isBookmarked(vKey)?icon('bookmarkFilled'):icon('bookmark')}</button>
+        </div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function wireWatchButtons(container){
@@ -2141,18 +2208,24 @@ function setReaction(key, emoji){
   }catch(e){ return null; }
 }
 
-/* ---- Bookmarks (stored per-device only, via localStorage) ---- */
+/* ---- Bookmarks (stored per-device only, via localStorage) — articles AND videos ---- */
 function getBookmarks(){
   try{ return JSON.parse(localStorage.getItem('bookmarks') || '[]'); }catch(e){ return []; }
 }
-function isBookmarked(url){
-  return getBookmarks().some(b => b.url === url);
+// Matches by key when present; falls back to url match for entries saved before
+// videos were bookmarkable (those older entries have no `key` field).
+function bookmarkMatches(b, key){
+  if(b.key) return b.key === key;
+  return b.url === key;
+}
+function isBookmarked(key){
+  return getBookmarks().some(b => bookmarkMatches(b, key));
 }
 function toggleBookmark(item){
   let list = getBookmarks();
-  const exists = list.some(b => b.url === item.url);
+  const exists = list.some(b => bookmarkMatches(b, item.key));
   if(exists){
-    list = list.filter(b => b.url !== item.url);
+    list = list.filter(b => !bookmarkMatches(b, item.key));
   } else {
     list.push(item);
   }
@@ -2183,7 +2256,10 @@ function wireEntryActions(container){
   });
   container.querySelectorAll('.bookmark-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const item = { url: btn.dataset.url, headline: btn.dataset.title, faculty: btn.dataset.faculty, date: btn.dataset.date };
+      const type = btn.dataset.type;
+      const item = type === 'video'
+        ? { key: btn.dataset.key, type:'video', videoId: btn.dataset.videoid, title: btn.dataset.title, channel: btn.dataset.channel, faculty: btn.dataset.faculty }
+        : { key: btn.dataset.key, type:'article', url: btn.dataset.url, headline: btn.dataset.title, faculty: btn.dataset.faculty, date: btn.dataset.date };
       const nowSaved = toggleBookmark(item);
       btn.classList.toggle('active', nowSaved);
       btn.innerHTML = nowSaved ? ICONS.bookmarkFilled : ICONS.bookmark;
@@ -3342,17 +3418,116 @@ function wireSearch(container){
   });
 }
 
-function viewSaved(){
-  const saved = getBookmarks();
-  const asDispatches = saved.map(b => ({ headline: b.headline, url: b.url, faculty: b.faculty, date: b.date, read: null }));
-  const html = asDispatches.length === 0
-    ? '<div class="empty-card">Nothing saved yet. Tap the bookmark icon on any article to save it here.</div>'
-    : dispatchListHtml(asDispatches);
+/* ---- Install / Invite a friend ----
+   iOS Safari has no API to trigger "Add to Home Screen" — Apple blocks that on purpose,
+   there is no workaround. Android/Chrome does expose a real install prompt, and we fire
+   it automatically the moment this page loads (captured globally at the top of the
+   script via beforeinstallprompt). This is the honest ceiling of what's possible. */
+function isStandaloneApp(){
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+function isIOSDevice(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+const IOS_SHARE_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-5px;"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`;
+
+function viewInvite(){
+  const installUrl = location.origin + location.pathname + '#install';
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=10&color=5C2530&bgcolor=FBF5EA&data=${encodeURIComponent(installUrl)}`;
   return `
     <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
     <section style="padding-top:14px;">
-      <div class="section-head"><span class="emoji">${icon('bookmark')}</span><h2>Saved Articles</h2></div>
-      ${html}
+      <div class="section-head"><span class="emoji">${icon('star')}</span><h2>Invite a Friend</h2></div>
+      <div class="invite-card">
+        <img class="invite-qr" src="${qrSrc}" alt="QR code that installs Mr Eric's Lounge" width="280" height="280">
+        <div class="invite-title">Scan to download</div>
+        <div class="invite-sub">Point their camera at this code — it'll walk them straight through adding it to their Home Screen as an app.</div>
+      </div>
+    </section>
+  `;
+}
+
+function viewInstall(){
+  if(isStandaloneApp()){
+    return `
+      <section style="padding-top:40px; text-align:center;">
+        <h2>Already installed</h2>
+        <p class="install-text">Mr Eric's Lounge is already on this device's Home Screen. You're all set.</p>
+        <a class="back-link" href="#" style="display:inline-block;margin-top:16px;">← Open the app</a>
+      </section>
+    `;
+  }
+  if(isIOSDevice()){
+    return `
+      <section style="padding-top:32px; text-align:center;">
+        <h2>Add to Home Screen</h2>
+        <p class="install-text">iPhones and iPads don't let websites install themselves automatically — Apple only allows one manual path:</p>
+        <div class="install-steps">
+          <div class="install-step"><span class="install-step-num">1</span><span>Tap the Share button ${IOS_SHARE_ICON} at the bottom of Safari</span></div>
+          <div class="install-step"><span class="install-step-num">2</span><span>Scroll down and tap <strong>Add to Home Screen</strong></span></div>
+          <div class="install-step"><span class="install-step-num">3</span><span>Tap <strong>Add</strong> — done</span></div>
+        </div>
+        <a class="back-link" href="#" style="display:inline-block;margin-top:20px;">← Or just open it in the browser</a>
+      </section>
+    `;
+  }
+  return `
+    <section style="padding-top:32px; text-align:center;">
+      <h2>Adding to your Home Screen…</h2>
+      <p class="install-text" id="installStatusText">If a prompt doesn't pop up in a second, tap the button below.</p>
+      <button class="random-tile" id="installNowBtn" style="margin:16px auto 0; max-width:280px;">
+        <span class="icon">${icon('dice')}</span>
+        <div><div class="title">Install now</div></div>
+      </button>
+      <a class="back-link" href="#" style="display:inline-block;margin-top:20px;">← Or just open it in the browser</a>
+    </section>
+  `;
+}
+
+function wireInstallPage(){
+  if(isStandaloneApp() || isIOSDevice()) return;
+  const btn = document.getElementById('installNowBtn');
+  const statusText = document.getElementById('installStatusText');
+  const tryPrompt = () => {
+    if(deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(choice => {
+        if(statusText) statusText.textContent = choice.outcome === 'accepted' ? "Installed — check your Home Screen." : "No worries — tap Install now whenever you're ready.";
+        deferredInstallPrompt = null;
+      });
+    } else if(statusText){
+      statusText.textContent = "One-tap install isn't available on this browser — use the browser menu (⋮) and look for \"Install app\" or \"Add to Home Screen\" instead.";
+    }
+  };
+  // Auto-attempt right away — the closest the web platform allows to "automatic".
+  setTimeout(tryPrompt, 400);
+  if(btn) btn.addEventListener('click', tryPrompt);
+}
+
+function viewSaved(){
+  const saved = getBookmarks();
+  const savedArticles = saved.filter(b => b.type === 'article' || (!b.type && b.url));
+  const savedVideos = saved.filter(b => b.type === 'video');
+
+  if(saved.length === 0){
+    return `
+      <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
+      <section style="padding-top:14px;">
+        <div class="section-head"><span class="emoji">${icon('bookmark')}</span><h2>Saved</h2></div>
+        <div class="empty-card">Nothing saved yet. Tap the bookmark icon on any article or video to save it here.</div>
+      </section>
+    `;
+  }
+
+  const asDispatches = savedArticles.map(b => ({ headline: b.headline, url: b.url, faculty: b.faculty, date: b.date, read: null }));
+  const asVideos = savedVideos.map(b => ({ title: b.title, channel: b.channel, videoId: b.videoId, faculty: b.faculty }));
+
+  return `
+    <a class="back-link" href="#">← Back to Mr Eric's Lounge</a>
+    <section style="padding-top:14px;">
+      <div class="section-head"><span class="emoji">${icon('bookmark')}</span><h2>Saved</h2></div>
+      ${savedArticles.length ? `<h3 style="margin:16px 0 8px;">Articles</h3>${dispatchListHtml(asDispatches)}` : ''}
+      ${savedVideos.length ? `<h3 style="margin:20px 0 8px;">Videos</h3><div class="watch-grid">${watchGridHtml(asVideos, 'saved')}</div>` : ''}
     </section>
   `;
 }
@@ -3849,8 +4024,8 @@ function viewHome(){
       <a class="photo-tile" href="#saved">
         <span class="icon">${icon('bookmark')}</span>
         <div>
-          <div class="title">Saved Articles</div>
-          <div class="sub">Everything you've bookmarked</div>
+          <div class="title">Saved</div>
+          <div class="sub">Everything you've bookmarked — articles and videos</div>
         </div>
       </a>
     </section>
@@ -3858,6 +4033,10 @@ function viewHome(){
     <section>
       <div class="section-head"><span class="emoji">${icon('cake')}</span><h2>Birthdays</h2><a class="section-link" href="#birthdays">See more →</a></div>
       ${upcomingBirthdayTileHtml()}
+    </section>
+
+    <section style="text-align:center; padding:20px 0 8px;">
+      <a class="invite-link" href="#invite">${icon('star')} Invite a friend</a>
     </section>
   `;
 }
@@ -3997,6 +4176,10 @@ function renderRoute(){
     html = viewPhotos();
   } else if(parts[0] === 'saved'){
     html = viewSaved();
+  } else if(parts[0] === 'invite'){
+    html = viewInvite();
+  } else if(parts[0] === 'install'){
+    html = viewInstall();
   } else if(parts[0] === 'superstars'){
     html = viewSuperstars();
   } else if(parts[0] === 'birthdays'){
@@ -4016,11 +4199,12 @@ function renderRoute(){
   void app.offsetWidth; // force reflow so the animation replays every time, not just once
   app.classList.add('route-fade');
   document.body.classList.toggle('theme-watch', parts[0] === 'watch' || parts[0] === 'play');
-  document.body.classList.toggle('show-bottom-tabs', parts.length === 0);
+  document.body.classList.add('show-bottom-tabs');
   wireWatchButtons(app);
   wireEntryActions(app);
   if(parts[0] === 'photos'){ wirePhotoLightbox(app); wirePhotoUpload(app); loadSubmittedPhotos(); }
   if(parts[0] === 'search') wireSearch(app);
+  if(parts[0] === 'install'){ wireInstallPage(); }
   if(parts.length === 0){ loadOnThisDay(); loadWeather(); loadLiveSportsData(); wireRandomButton(app); wireRandomVideoButton(app); checkAchievements(); }
   if(parts[0] === 'sports' && parts[1] === 'tables'){ loadLiveSportsData(); }
   if(parts[0] === 'sports' && parts[1] === 'league' && parts[2]){ loadLiveSportsData(); }

@@ -475,6 +475,15 @@
   .weather-row{padding:8px 0;}
   .weather-row + .weather-row{border-top:1px solid rgba(255,255,255,.15);}
   .weather-city{font-family:'Space Mono', monospace; font-size:12px; text-transform:uppercase; letter-spacing:.04em; opacity:.75; margin-bottom:2px;}
+  .weather-city-link{
+    display:inline-block;
+    color:inherit;
+    text-decoration:none;
+    cursor:pointer;
+  }
+  @media (hover:hover){
+    .weather-city-link:hover{ opacity:1; text-decoration:underline; }
+  }
   .weather-detail{font-weight:700; font-size:15px;}
   .otd-card .otd-year{
     font-family:'Space Mono', monospace;
@@ -3050,7 +3059,7 @@ async function loadWeather(){
       const [icon, label] = WEATHER_CODES[cw.weathercode] || ['🌡️','Current conditions'];
       return `
         <div class="weather-row">
-          <div class="weather-city">${escapeHtml(loc.city)}, ${escapeHtml(loc.country)}</div>
+          <a class="weather-city weather-city-link" href="https://www.windy.com/?temp,${loc.lat},${loc.lon},8" target="_blank" rel="noopener">${escapeHtml(loc.city)}, ${escapeHtml(loc.country)} ↗</a>
           <div class="weather-detail">${icon} ${Math.round(cw.temperature)}°C — ${escapeHtml(label)}, wind ${Math.round(cw.windspeed)} kn</div>
         </div>
       `;

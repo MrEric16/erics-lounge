@@ -56,7 +56,6 @@
     --gold:#E8C766;
   }
   body.dark-mode header{
-    background:linear-gradient(135deg, #33241D 0%, #2A1F19 60%, #241A15 100%);
     border-bottom-color:#54402F;
   }
   body.dark-mode .fac-tile,
@@ -95,10 +94,30 @@
 
   /* ---------- Header ---------- */
   header{
-    background:linear-gradient(135deg, #E8CFAE 0%, #DEBE93 60%, #D0AA79 100%);
+    position:relative;
     padding:36px 0 26px 0;
     border-bottom:4px solid var(--card);
+    transition: border-color var(--theme-fade) ease;
+    z-index:0;
   }
+  header::before, header::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    z-index:-1;
+  }
+  header::before{
+    background:linear-gradient(135deg, #E8CFAE 0%, #DEBE93 60%, #D0AA79 100%);
+    opacity:1;
+    transition: opacity var(--theme-fade) ease;
+  }
+  header::after{
+    background:linear-gradient(135deg, #33241D 0%, #2A1F19 60%, #241A15 100%);
+    opacity:0;
+    transition: opacity var(--theme-fade) ease;
+  }
+  body.dark-mode header::before{ opacity:0; }
+  body.dark-mode header::after{ opacity:1; }
   .masthead{text-align:center;}
   h1.title{
     font-size:clamp(38px,7vw,62px);

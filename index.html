@@ -707,23 +707,22 @@
 
   .explore-card{
     display:block;
-    background:var(--card);
+    color:#fff;
     border-radius:16px;
     padding:16px 18px;
     margin-bottom:10px;
-    box-shadow:0 2px 0 rgba(58,42,30,.06);
+    box-shadow:0 3px 0 rgba(58,42,30,.15);
     text-decoration:none;
   }
   .explore-card-name{
-    font-weight:700;
+    font-weight:800;
     font-size:17px;
-    color:var(--ink);
+    color:#fff;
     margin-bottom:6px;
   }
-  .explore-card:hover .explore-card-name{ color:var(--coral); }
   .explore-card-desc{
     font-size:13px;
-    color:var(--ink-soft);
+    color:rgba(255,255,255,.88);
     line-height:1.5;
   }
 
@@ -3519,10 +3518,14 @@ function isIOSDevice(){
 const IOS_SHARE_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-5px;"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`;
 
 function viewExplore(){
+  // Cycle through the site's existing 12 faculty colors so every tile is visually
+  // distinct without introducing any new palette colors.
+  const EXPLORE_COLORS = ['--f-jur','--f-ir','--f-econ','--f-biz','--f-sci','--f-it',
+                           '--f-psy','--f-des','--f-hist','--f-travel','--f-tech','--f-sport'];
   const html = EXPLORE_SITES.length === 0
     ? '<div class="empty-card">Nothing here yet. Mr Eric is still adding sites.</div>'
-    : EXPLORE_SITES.map(s => `
-        <a class="explore-card" href="${s.url}" target="_blank" rel="noopener noreferrer">
+    : EXPLORE_SITES.map((s, i) => `
+        <a class="explore-card" style="background:var(${EXPLORE_COLORS[i % EXPLORE_COLORS.length]})" href="${s.url}" target="_blank" rel="noopener noreferrer">
           <div class="explore-card-name">${escapeHtml(s.name)}</div>
           <div class="explore-card-desc">${escapeHtml(s.desc)}</div>
         </a>
